@@ -1,8 +1,8 @@
 # IP Monitor
 
-IP Monitor is an application running on Linux to monitor your IPs. If your IPs
-are changed, the application will push a message to let you known via
-[ServerChan](https://sct.ftqq.com/).
+IP Monitor is an application running on Linux to monitor your IP changes. It is
+a DDNS-like way. If your IPs are changed, the application will push a message to
+let you know via [ServerChan](https://sct.ftqq.com/).
 
 The application runs with crontab to make all functionalities work. Here's a
 typical example that checks IPs in every 5 minutes.
