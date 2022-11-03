@@ -12,5 +12,5 @@ $ go build -o ipmonitor cmd/main.go
 $ sudo mv ipmonitor /usr/local/bin
 $ crontab -e
 # insert a new line:
-# */5 * * * * ipmonitor --key {sendkey} --name {server name (optional)} --heartbeat true --devices {links (optional, e.g. "lo,enp0")}
+# */5 * * * * ipmonitor --key={sendkey} --name={server name (optional)} --heartbeat=true --devices={links (optional, e.g. "lo,enp0")}
 ```

@@ -91,23 +91,8 @@ func (m *Monitor) Check() {
 		return
 	}
 
-	if len(m.devices) == 0 {
-		if string(bytes) != netInfoStr {
-			m.updateNetInfo(netInfoStr)
-		}
-	} else {
-		oldNetInfo := strings.Split(string(bytes), "\n")
-		fmt.Println("netInfo", netInfo, len(netInfo))
-		fmt.Println("oldNetInfo", oldNetInfo, len(oldNetInfo))
-		fmt.Println("devices", m.devices)
-		for _, dev := range m.devices {
-			idx1, ok1 := stringArrContains(netInfo, fmt.Sprintf("- %s:", dev))
-			idx2, ok2 := stringArrContains(oldNetInfo, fmt.Sprintf("- %s:", dev))
-			if (ok1 != ok2) || netInfo[idx1] != oldNetInfo[idx2] {
-				m.updateNetInfo(netInfoStr)
-				return
-			}
-		}
+	if string(bytes) != netInfoStr {
+		m.updateNetInfo(netInfoStr)
 	}
 
 }
@@ -130,6 +115,9 @@ func (m *Monitor) getNetInfo() []string {
 	}
 	for _, link := range links {
 		linkName := link.Attrs().Name
+		if len(m.devices) > 0 && !stringArrContains(m.devices, linkName) {
+			continue
+		}
 		addrs, err := netlink.AddrList(link, netlink.FAMILY_ALL)
 		if err != nil {
 			m.pusher.Push(fmt.Sprintf("%s: FAILED", m.name), fmt.Sprintf("Failed to list addr for link %s, err = %v", linkName, err))
@@ -145,11 +133,11 @@ func (m *Monitor) getNetInfo() []string {
 	return stringArr
 }
 
-func stringArrContains(arr []string, target string) (int, bool) {
-	for i, v := range arr {
-		if strings.Contains(v, target) {
-			return i, true
+func stringArrContains(arr []string, target string) bool {
+	for _, v := range arr {
+		if v == target {
+			return true
 		}
 	}
-	return 0, false
+	return false
 }
