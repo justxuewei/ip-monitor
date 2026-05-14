@@ -1,39 +1,51 @@
 package pkg
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
-type ServerChanPayload struct {
-	Title string `json:"title"`
-	Desp  string `json:"desp"`
-}
+const messagePlaceholder = "{message}"
 
 type ServerChan struct {
-	sendKey string
+	webhookURL string
 }
 
-func NewServerChan(sendKey string) *ServerChan {
+func NewServerChan(webhookURL string) *ServerChan {
 	return &ServerChan{
-		sendKey: sendKey,
+		webhookURL: webhookURL,
 	}
 }
 
 func (s *ServerChan) Push(title string, msg string) {
-	payload := &ServerChanPayload{
-		Title: title,
-		Desp:  msg,
-	}
-	payloadJSON, _ := json.Marshal(payload)
-	resp, err := http.Post(
-		fmt.Sprintf("https://sctapi.ftqq.com/%s.send", s.sendKey),
-		"application/json",
-		strings.NewReader(string(payloadJSON)))
+	body := mergeTitleAndMessage(title, msg)
+	webhookURL, err := buildWebhookURL(s.webhookURL, body)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("Push: payload: %v, resp: %v\n", payload, resp)
+	resp, err := http.Get(webhookURL)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+	fmt.Printf("Push: resp: %v\n", resp)
+}
+
+func buildWebhookURL(webhookURL string, message string) (string, error) {
+	if !strings.Contains(webhookURL, messagePlaceholder) {
+		return "", fmt.Errorf("webhook-url must contain %s placeholder", messagePlaceholder)
+	}
+	return strings.ReplaceAll(webhookURL, messagePlaceholder, url.QueryEscape(message)), nil
+}
+
+func mergeTitleAndMessage(title string, msg string) string {
+	if title == "" {
+		return msg
+	}
+	if msg == "" {
+		return title
+	}
+	return fmt.Sprintf("%s\n%s", title, msg)
 }
